@@ -31,14 +31,16 @@ const int redLED4Pin = 26;     // Red LED for side D
 const int densityThreshold = 1; // Density threshold to determine traffic density
 
 // Define Bluetooth communication pins
-const int bluetoothTxPin = 22;  // Bluetooth TX pin
-const int bluetoothRxPin = 23;  // Bluetooth RX pin
+const int bluetoothTxPin = 0;  // Bluetooth TX pin
+const int bluetoothRxPin = 1;  // Bluetooth RX pin
 
-SoftwareSerial bluetoothSerial(bluetoothRxPin, bluetoothTxPin);  // Create a software serial port for Bluetooth communication
+SoftwareSerial BT(bluetoothRxPin, bluetoothTxPin);  // Create a software serial port for Bluetooth communication
 
 bool isAutomaticMode = true;  // Flag to indicate if the system is in automatic mode
-int normalDelay = 1000;
+int normalDelay = 2000;
 int yellowDelay = 500;
+int redDelay = 500;
+int count = 1;
 
 void setup() {
   // Initialize sensor pins as input
@@ -67,164 +69,235 @@ void setup() {
 
   Serial.begin(9600);
   // Initialize Bluetooth serial communication
-  bluetoothSerial.begin(9600);
+  BT.begin(9600);
 }
 
 void loop() {
   Serial.println("Traffic Control System");
-  if (isAutomaticMode) {
+  String command = "";
+  delay(10);
+  if (BT.available())
+  {
+    //Check if there is an available byte to read
+    Serial.println("BT Available - Command");
+    delay(10);                              //Delay added to make thing stable
+    //char command[] = "";
+    char c = BT.read();                     //Conduct a serial read
+    command += c;                           //build the string.
+    Serial.println(command);
+  }
+ 
+  else if (command == "1")
+  {
+    Serial.println("Executing 1 command");
+    // Side A traffic lights
+    Serial.println("Side A Green");
+    greenA(1000);
+  }
+  else if (command == "2")
+  {
+    // Side B traffic lights
+    Serial.println("Side B Green");
+    greenB(1000);
+  }
+  else if (command == "3")
+  {
+    // Side C traffic lights
+    Serial.println("Side C Green");
+    greenC(1000);
+  }
+  else if ( command == "4")
+  {
+    Serial.println("Side D Green");
+    greenD(1000);
+  }
+  else if (command == "5")
+  {
+    Serial.println("Lights OFF");
+    turnOffAllLights();
+  }
+  else if (command == "6")
+  {
+    Serial.println("Automatic Mode Changed");
+    isAutomaticMode != isAutomaticMode;
+  }
+//  else if(1){    
+//    Serial.println("Lights OFF");
+//    turnOffAllLights();
+//    }
+  else if(isAutomaticMode) {
     // Automatic mode, read sensor values and adjust traffic lights accordingly
     int sensor1AValue = !digitalRead(sensor1APin);
     int sensor1BValue = !digitalRead(sensor1BPin);
+    int densitySideA = sensor1AValue + sensor1BValue;
+    if (densitySideA >= densityThreshold) {
+      Serial.println(" Traffic at Side A ");
+      Serial.print("Density: ");
+      Serial.println(densitySideA);
+      // High density, stop traffic
+      greenA(densitySideA * 1000);
+    }
+    else {
+      Serial.println("No Traffic at Side A");
+      Serial.print("Density: ");
+      Serial.println(densitySideA);
+    }
+
     int sensor2AValue = !digitalRead(sensor2APin);
     int sensor2BValue = !digitalRead(sensor2BPin);
+    int densitySideB = sensor2AValue + sensor2BValue;
+    if (densitySideB >= densityThreshold) {
+      Serial.println(" Traffic at Side B ");
+      Serial.print("Density: ");
+      Serial.println(densitySideB);
+      greenB(densitySideB * 1000);
+    }
+    else {
+      Serial.println("No Traffic at Side B");
+      Serial.print("Density: ");
+      Serial.println(densitySideB);
+    }
+
     int sensor3AValue = !digitalRead(sensor3APin);
     int sensor3BValue = !digitalRead(sensor3BPin);
+    int densitySideC = sensor3AValue + sensor3BValue;
+    if (densitySideB >= densityThreshold) {
+      Serial.println(" Traffic at Side C ");
+      Serial.print("Density: ");
+      Serial.println(densitySideC);
+      // High density, stop traffic
+      greenC(densitySideC * 1000);
+    }
+    else {
+      Serial.println("No Traffic at Side C");
+      Serial.print("Density: ");
+      Serial.println(densitySideC);
+    }
+
     int sensor4AValue = !digitalRead(sensor4APin);
     int sensor4BValue = !digitalRead(sensor4BPin);
-
-    // Calculate density for each side
-    int densitySideA = sensor1AValue + sensor1BValue;
-    int densitySideB = sensor2AValue + sensor2BValue;
-    int densitySideC = sensor3AValue + sensor3BValue;
     int densitySideD = sensor4AValue + sensor4BValue;
 
-    // Adjust traffic lights based on density for each side
-    controlTrafficLights(densitySideA, greenLED1Pin, yellowLED1Pin, redLED1Pin);
-    controlTrafficLights(densitySideB, greenLED2Pin, yellowLED2Pin, redLED2Pin);
-    controlTrafficLights(densitySideC, greenLED3Pin, yellowLED3Pin, redLED3Pin);
-    controlTrafficLights(densitySideD, greenLED4Pin, yellowLED4Pin, redLED4Pin);
-  } 
-  if(1) {
-    // Manual mode, control lights based on Bluetooth commands
-    while (bluetoothSerial.available()) {
-      char command = bluetoothSerial.read();
-
-      switch (command) {
-        case 'A':
-          // Side A traffic lights
-          digitalWrite(greenLED1Pin, HIGH);
-          digitalWrite(yellowLED1Pin, LOW);
-          digitalWrite(redLED1Pin, LOW);
-          digitalWrite(greenLED2Pin, LOW);
-          digitalWrite(yellowLED2Pin, LOW);
-          digitalWrite(redLED2Pin, HIGH);
-          digitalWrite(greenLED3Pin, LOW);
-          digitalWrite(yellowLED3Pin, LOW);
-          digitalWrite(redLED3Pin, HIGH);
-          digitalWrite(greenLED4Pin, LOW);
-          digitalWrite(yellowLED4Pin, LOW);
-          digitalWrite(redLED4Pin, HIGH);
-          delay(1000);
-          digitalWrite(greenLED1Pin, LOW);
-          digitalWrite(yellowLED1Pin, HIGH);
-          delay(yellowDelay);
-          digitalWrite(yellowLED1Pin, LOW);
-          digitalWrite(redLED1Pin, HIGH);
-          break;
-
-        case 'B':
-          // Side B traffic lights
-          digitalWrite(greenLED1Pin, LOW);
-          digitalWrite(yellowLED1Pin, LOW);
-          digitalWrite(redLED1Pin, HIGH);
-          digitalWrite(greenLED2Pin, HIGH);
-          digitalWrite(yellowLED2Pin, LOW);
-          digitalWrite(redLED2Pin, LOW);
-          digitalWrite(greenLED3Pin, LOW);
-          digitalWrite(yellowLED3Pin, LOW);
-          digitalWrite(redLED3Pin, HIGH);
-          digitalWrite(greenLED4Pin, LOW);
-          digitalWrite(yellowLED4Pin, LOW);
-          digitalWrite(redLED4Pin, HIGH);
-          delay(1000);
-          digitalWrite(greenLED2Pin, LOW);
-          digitalWrite(yellowLED2Pin, HIGH);
-          delay(yellowDelay);
-          digitalWrite(yellowLED2Pin, LOW);
-          digitalWrite(redLED2Pin, HIGH);
-          break;
-
-        case 'C':
-          // Side C traffic lights
-          digitalWrite(greenLED1Pin, LOW);
-          digitalWrite(yellowLED1Pin, LOW);
-          digitalWrite(redLED1Pin, HIGH);
-          digitalWrite(greenLED2Pin, LOW);
-          digitalWrite(yellowLED2Pin, LOW);
-          digitalWrite(redLED2Pin, HIGH);
-          digitalWrite(greenLED3Pin, HIGH);
-          digitalWrite(yellowLED3Pin, LOW);
-          digitalWrite(redLED3Pin, LOW);
-          digitalWrite(greenLED4Pin, LOW);
-          digitalWrite(yellowLED4Pin, LOW);
-          digitalWrite(redLED4Pin, HIGH);
-          delay(1000);
-          digitalWrite(greenLED3Pin, LOW);
-          digitalWrite(yellowLED3Pin, HIGH);
-          delay(yellowDelay);
-          digitalWrite(yellowLED3Pin, LOW);
-          digitalWrite(redLED3Pin, HIGH);
-          break;
-
-        case 'D':
-          // Side D traffic lights
-          digitalWrite(greenLED1Pin, LOW);
-          digitalWrite(yellowLED1Pin, LOW);
-          digitalWrite(redLED1Pin, HIGH);
-          digitalWrite(greenLED2Pin, LOW);
-          digitalWrite(yellowLED2Pin, LOW);
-          digitalWrite(redLED2Pin, HIGH);
-          digitalWrite(greenLED3Pin, LOW);
-          digitalWrite(yellowLED3Pin, LOW);
-          digitalWrite(redLED3Pin, HIGH);
-          digitalWrite(greenLED4Pin, HIGH);
-          digitalWrite(yellowLED4Pin, LOW);
-          digitalWrite(redLED4Pin, LOW);
-          delay(1000);
-          digitalWrite(greenLED4Pin, LOW);
-          digitalWrite(yellowLED4Pin, HIGH);
-          delay(yellowDelay);
-          digitalWrite(yellowLED4Pin, LOW);
-          digitalWrite(redLED4Pin, HIGH);
-          break;
-
-        case 'E':
-          isAutomaticMode != isAutomaticMode;
-          break ;
-           
-        default:
-          // Invalid command, turn off all lights
-          //turnOffAllLights();
-          break;
-      }
+    if (densitySideD >= densityThreshold) {
+      Serial.println(" Traffic at Side D");
+      Serial.print("Density: ");
+      Serial.println(densitySideD);
+      greenD(densitySideD * 1000);
+    }
+    else {
+      Serial.println("No Traffic at Side D");
+      Serial.print("Density: ");
+      Serial.println(densitySideD);
+    }
+    if (count == 1) {
+      greenA(1000);
+      count++;
+    }
+    else if (count == 2) {
+      greenB(1000);
+      count++;
+    }
+    else if (count == 3) {
+      greenC(1000);
+      count++;
+    }
+    else if (count == 4) {
+      greenD(1000);
+      count = 1;
     }
   }
+  else{
+    Serial.println("Lights OFF");
+    turnOffAllLights();
+  }
+
 }
 
-void controlTrafficLights(int density, int greenPin, int yellowPin, int redPin) {
-  if (density >= densityThreshold) {
-    Serial.print("Heavy Traffic at:");
-    Serial.println(((greenPin-10)/3)+1);
-    Serial.print("Density: ");
-    Serial.println(density);
-    // High density, stop traffic
-    digitalWrite(greenPin, LOW);
-    digitalWrite(yellowPin, LOW);
-    digitalWrite(redPin, HIGH);
-    delay(density*1000);
-  } else {
 
-    Serial.print("Low Traffic at:");
-    Serial.println(((greenPin-10)/3)+1);
-    Serial.print("Density:");
-    Serial.println(density);
-    // Low density, allow traffic
-    digitalWrite(greenPin, HIGH);
-    digitalWrite(yellowPin, LOW);
-    digitalWrite(redPin, LOW);
-    delay(1000);
-  }
+void greenA(int wait) {
+  digitalWrite(greenLED1Pin, HIGH);
+  digitalWrite(yellowLED1Pin, LOW);
+  digitalWrite(redLED1Pin, LOW);
+  digitalWrite(greenLED2Pin, LOW);
+  digitalWrite(yellowLED2Pin, LOW);
+  digitalWrite(redLED2Pin, HIGH);
+  digitalWrite(greenLED3Pin, LOW);
+  digitalWrite(yellowLED3Pin, LOW);
+  digitalWrite(redLED3Pin, HIGH);
+  digitalWrite(greenLED4Pin, LOW);
+  digitalWrite(yellowLED4Pin, LOW);
+  digitalWrite(redLED4Pin, HIGH);
+  delay(wait);
+  digitalWrite(greenLED1Pin, LOW);
+  digitalWrite(yellowLED1Pin, HIGH);
+  delay(yellowDelay);
+  digitalWrite(yellowLED1Pin, LOW);
+  digitalWrite(redLED1Pin, HIGH);
+  delay(redDelay);
+}
+
+void greenB(int wait) {
+  digitalWrite(greenLED1Pin, LOW);
+  digitalWrite(yellowLED1Pin, LOW);
+  digitalWrite(redLED1Pin, HIGH);
+  digitalWrite(greenLED2Pin, HIGH);
+  digitalWrite(yellowLED2Pin, LOW);
+  digitalWrite(redLED2Pin, LOW);
+  digitalWrite(greenLED3Pin, LOW);
+  digitalWrite(yellowLED3Pin, LOW);
+  digitalWrite(redLED3Pin, HIGH);
+  digitalWrite(greenLED4Pin, LOW);
+  digitalWrite(yellowLED4Pin, LOW);
+  digitalWrite(redLED4Pin, HIGH);
+  delay(wait);
+  digitalWrite(greenLED2Pin, LOW);
+  digitalWrite(yellowLED2Pin, HIGH);
+  delay(yellowDelay);
+  digitalWrite(yellowLED2Pin, LOW);
+  digitalWrite(redLED2Pin, HIGH);
+  delay(redDelay);
+}
+void greenC(int wait) {
+  digitalWrite(greenLED1Pin, LOW);
+  digitalWrite(yellowLED1Pin, LOW);
+  digitalWrite(redLED1Pin, HIGH);
+  digitalWrite(greenLED2Pin, LOW);
+  digitalWrite(yellowLED2Pin, LOW);
+  digitalWrite(redLED2Pin, HIGH);
+  digitalWrite(greenLED3Pin, HIGH);
+  digitalWrite(yellowLED3Pin, LOW);
+  digitalWrite(redLED3Pin, LOW);
+  digitalWrite(greenLED4Pin, LOW);
+  digitalWrite(yellowLED4Pin, LOW);
+  digitalWrite(redLED4Pin, HIGH);
+  delay(wait);
+  digitalWrite(greenLED3Pin, LOW);
+  digitalWrite(yellowLED3Pin, HIGH);
+  delay(yellowDelay);
+  digitalWrite(yellowLED3Pin, LOW);
+  digitalWrite(redLED3Pin, HIGH);
+  delay(redDelay);
+}
+void greenD(int wait) {
+  digitalWrite(greenLED1Pin, LOW);
+  digitalWrite(yellowLED1Pin, LOW);
+  digitalWrite(redLED1Pin, HIGH);
+  digitalWrite(greenLED2Pin, LOW);
+  digitalWrite(yellowLED2Pin, LOW);
+  digitalWrite(redLED2Pin, HIGH);
+  digitalWrite(greenLED3Pin, LOW);
+  digitalWrite(yellowLED3Pin, LOW);
+  digitalWrite(redLED3Pin, HIGH);
+  digitalWrite(greenLED4Pin, HIGH);
+  digitalWrite(yellowLED4Pin, LOW);
+  digitalWrite(redLED4Pin, LOW);
+  delay(wait);
+  digitalWrite(greenLED4Pin, LOW);
+  digitalWrite(yellowLED4Pin, HIGH);
+  delay(yellowDelay);
+  digitalWrite(yellowLED4Pin, LOW);
+  digitalWrite(redLED4Pin, HIGH);
+  delay(redDelay);
 }
 
 void turnOffAllLights() {
@@ -240,4 +313,5 @@ void turnOffAllLights() {
   digitalWrite(greenLED4Pin, LOW);
   digitalWrite(yellowLED4Pin, LOW);
   digitalWrite(redLED4Pin, LOW);
+  delay(1000);
 }
