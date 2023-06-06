@@ -1,31 +1,31 @@
 #include <SoftwareSerial.h>
 
 // Define IR sensor pins
-const int sensor1APin = 2;  // IR sensor 1, side A
-const int sensor1BPin = 3;  // IR sensor 2, side A
-const int sensor2APin = 4;  // IR sensor 1, side B
-const int sensor2BPin = 5;  // IR sensor 2, side B
-const int sensor3APin = 6;  // IR sensor 1, side C
-const int sensor3BPin = 7;  // IR sensor 2, side C
-const int sensor4APin = 8;  // IR sensor 1, side D
-const int sensor4BPin = 9;  // IR sensor 2, side D
+const int sensor1APin = 42;  // IR sensor 1, side A
+const int sensor1BPin = 43;  // IR sensor 2, side A
+const int sensor2APin = 44;  // IR sensor 1, side B
+const int sensor2BPin = 45;  // IR sensor 2, side B
+const int sensor3APin = 50;  // IR sensor 1, side C
+const int sensor3BPin = 51;  // IR sensor 2, side C
+const int sensor4APin = 52;  // IR sensor 1, side D
+const int sensor4BPin = 53;  // IR sensor 2, side D
 
 // Define LED pins
-const int greenLED1Pin = 10;   // Green LED for side A
-const int yellowLED1Pin = 11;  // Yellow LED for side A
-const int redLED1Pin = 12;     // Red LED for side A
+const int greenLED1Pin = 22;   // Green LED for side A
+const int yellowLED1Pin = 23;  // Yellow LED for side A
+const int redLED1Pin = 24;     // Red LED for side A
 
-const int greenLED2Pin = 14;   // Green LED for side B
-const int yellowLED2Pin = 15;  // Yellow LED for side B
-const int redLED2Pin = 16;     // Red LED for side B
+const int greenLED2Pin = 26;   // Green LED for side B
+const int yellowLED2Pin = 27;  // Yellow LED for side B
+const int redLED2Pin = 28;     // Red LED for side B
 
-const int greenLED3Pin = 17;   // Green LED for side C
-const int yellowLED3Pin = 18;  // Yellow LED for side C
-const int redLED3Pin = 19;     // Red LED for side C
+const int greenLED3Pin = 30;   // Green LED for side C
+const int yellowLED3Pin = 31;  // Yellow LED for side C
+const int redLED3Pin = 32;     // Red LED for side C
 
-const int greenLED4Pin = 22;   // Green LED for side D
-const int yellowLED4Pin = 24;  // Yellow LED for side D
-const int redLED4Pin = 26;     // Red LED for side D
+const int greenLED4Pin = 34;   // Green LED for side D
+const int yellowLED4Pin = 35;  // Yellow LED for side D
+const int redLED4Pin = 36;     // Red LED for side D
 
 // Define threshold values
 const int densityThreshold = 1; // Density threshold to determine traffic density
@@ -86,7 +86,7 @@ void loop() {
     command += c;                           //build the string.
     Serial.println(command);
   }
- 
+
   else if (command == "1")
   {
     Serial.println("Executing 1 command");
@@ -161,7 +161,7 @@ void loop() {
     int sensor3AValue = !digitalRead(sensor3APin);
     int sensor3BValue = !digitalRead(sensor3BPin);
     int densitySideC = sensor3AValue + sensor3BValue;
-    if (densitySideB >= densityThreshold) {
+    if (densitySideC >= densityThreshold) {
       Serial.println(" Traffic at Side C ");
       Serial.print("Density: ");
       Serial.println(densitySideC);
