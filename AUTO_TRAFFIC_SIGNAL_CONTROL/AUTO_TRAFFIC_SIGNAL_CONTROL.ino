@@ -1,5 +1,6 @@
 #include <SoftwareSerial.h>
 
+
 // Define IR sensor pins
 const int sensor1APin = 42;  // IR sensor 1, side A
 const int sensor1BPin = 43;  // IR sensor 2, side A
@@ -34,12 +35,14 @@ const int densityThreshold = 1; // Density threshold to determine traffic densit
 const int bluetoothTxPin = 0;  // Bluetooth TX pin
 const int bluetoothRxPin = 1;  // Bluetooth RX pin
 
-SoftwareSerial BT(bluetoothRxPin, bluetoothTxPin);  // Create a software serial port for Bluetooth communication
+SoftwareSerial BT(0,1);  //RX = 10, TX=11 of Arduino and Tx and Rx of Bluetooth
+String readvoice;
+  // Create a software serial port for Bluetooth communication
 
 bool isAutomaticMode = true;  // Flag to indicate if the system is in automatic mode
 int normalDelay = 2000;
-int yellowDelay = 500;
-int redDelay = 500;
+int yellowDelay = 600;
+int redDelay = 1000;
 int count = 1;
 
 void setup() {
@@ -76,18 +79,24 @@ void loop() {
   Serial.println("Traffic Control System");
   String command = "";
   delay(10);
-  if (BT.available())
+//  if (BT.available())
+//  {
+//    //Check if there is an available byte to read
+//    Serial.println("BT Available - Command");
+//    delay(10);                              //Delay added to make thing stable
+//    //char command[] = "";
+//    char c = BT.read();                     //Conduct a serial read
+//    command += c;                           //build the string.
+//    Serial.println(command);
+//  }
+ while (Serial.available())
   {
-    //Check if there is an available byte to read
-    Serial.println("BT Available - Command");
-    delay(10);                              //Delay added to make thing stable
-    //char command[] = "";
-    char c = BT.read();                     //Conduct a serial read
-    command += c;                           //build the string.
-    Serial.println(command);
-  }
+    delay(3);
+    char c = Serial.read();
+    command = c;
+    }
 
-  else if (command == "1")
+   if (command == "1")
   {
     Serial.println("Executing 1 command");
     // Side A traffic lights
